@@ -1,4 +1,3 @@
-
 //------------------------------------------------------ARDUINO RECEIVER CODE--------------------------------------------------------
 
 
@@ -11,6 +10,7 @@
 #include<string.h>
 #include<netdb.h>
 #include<sys/types.h>
+#include <netinet/tcp.h>
 #include<netinet/in.h>
 #include<sys/socket.h>
 #include<arpa/inet.h>
@@ -18,7 +18,7 @@
 #include<math.h>
 
 #define SERVERPORT 15000							// Static port for the server
-#define MAXBUFLEN 100								// Maximum Length Constraint
+#define MAXBUFLEN 32								// Maximum Length Constraint
 #define BACKLOG 1000									// Number of connections allowed on the input queue															//         incoming queue
 
 
@@ -35,139 +35,155 @@ struct sockaddr_in serverinfo;							// Structure for the server
 int main()
 {
 
-//----------------------------------------------------Get the Hostname------------------------------------------------------
+  //----------------------------------------------------Get the Hostname------------------------------------------------------
 
 
-int HostnameError;
-char hostname[200];														// To store the hostname retrieved
+  int HostnameError;
+  char hostname[200];														// To store the hostname retrieved
 
-HostnameError=gethostname(hostname,sizeof(hostname));					// Get the host name
-//printf("The Error Bit for gethostname Is : %d\n",HostnameError);
-//printf("The Hostname Is : %s\n",hostname);
-
-
-//-----------------------------------------------Initialize The Structure---------------------------------------------------
+  HostnameError=gethostname(hostname,sizeof(hostname));					// Get the host name
+  //printf("The Error Bit for gethostname Is : %d\n",HostnameError);
+  //printf("The Hostname Is : %s\n",hostname);
 
 
-serverinfo.sin_family = AF_INET;										// To initialize to IPv4
-serverinfo.sin_port = htons(SERVERPORT);								// To initialize the static port number 
-//printf("The Server's Port Number Is : %d\n",serverinfo.sin_port);
-
-struct hostent *ipaddr1;
-ipaddr1 = gethostbyname(hostname);										// To get the IP Address
-
-serverinfo.sin_addr = *((struct in_addr *)ipaddr1->h_addr);				// Load the IP Address to the structure
-//printf("The Server's Host Address Is : %s\n",inet_ntoa(serverinfo.sin_addr));
+  //-----------------------------------------------Initialize The Structure---------------------------------------------------
 
 
+  serverinfo.sin_family = AF_INET;										// To initialize to IPv4
+  serverinfo.sin_port = htons(SERVERPORT);								// To initialize the static port number 
+  //printf("The Server's Port Number Is : %d\n",serverinfo.sin_port);
 
-//--------------------------------------------------Create The TCP Socket---------------------------------------------------
+  struct hostent *ipaddr1;
+  ipaddr1 = gethostbyname(hostname);										// To get the IP Address
 
-
-int socketdescriptortcp;
-
-socketdescriptortcp = socket(serverinfo.sin_family, SOCK_STREAM, 0);	// Getting a TCP Socket descriptor
-//printf("The Socket Descriptor Is : %d\n",socketdescriptortcp);
-		if (socketdescriptortcp == -1)									// Error Checking
-		{
-			perror("socket");
-			exit(1);
-		}
-
-char yes='1';															// Clear any hogging port if any
-
-if(setsockopt(socketdescriptortcp,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1)
-{
-perror("setsockopt");													// Error Checking
-exit(1);
-}
-
-//----------------------------------------------------Bind The Socket-------------------------------------------------------
-
-
-int binderrortcp;
-																		// Binding the socket
-binderrortcp = bind(socketdescriptortcp, (struct sockaddr*)&serverinfo, sizeof(struct sockaddr));
-//printf("The Bind Error Is : %d\n\n",binderrortcp);
-if(binderrortcp==-1)
-	{
-		perror("Bind");													// Error Checking
-		exit(1);
-	}
-
-
-printf("Server Is Listening On The TCP Port\n\n");
+  serverinfo.sin_addr = *((struct in_addr *)ipaddr1->h_addr);				// Load the IP Address to the structure
+  //printf("The Server's Host Address Is : %s\n",inet_ntoa(serverinfo.sin_addr));
 
 
 
-while(1)																// To loop back for next messages
-{
+  //--------------------------------------------------Create The TCP Socket---------------------------------------------------
 
-//-----------------------------------------------Wait for Incoming Connections----------------------------------------------
+
+  int socketdescriptortcp;
+
+  socketdescriptortcp = socket(serverinfo.sin_family, SOCK_STREAM, 0);	// Getting a TCP Socket descriptor
+  //printf("The Socket Descriptor Is : %d\n",socketdescriptortcp);
+  if (socketdescriptortcp == -1)									// Error Checking
+  {
+      perror("socket");
+      exit(1);
+  }
+
+  char yes='1';															// Clear any hogging port if any
+
+  if(setsockopt(socketdescriptortcp,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1)
+  {
+    perror("setsockopt");													// Error Checking
+    exit(1);
+  }
+
+  //----------------------------------------------------Bind The Socket-------------------------------------------------------
+
+
+  int binderrortcp;
+  // Binding the socket
+  binderrortcp = bind(socketdescriptortcp, (struct sockaddr*)&serverinfo, sizeof(struct sockaddr));
+  //printf("The Bind Error Is : %d\n\n",binderrortcp);
+  if(binderrortcp==-1)
+  {
+    perror("Bind");													// Error Checking
+    exit(1);
+  }
+
+
+  printf("Server Is Listening On The TCP Port %d\n\n", SERVERPORT);
+
+
+
+  while(1)																// To loop back for next messages
+  {
+
+    //-----------------------------------------------Wait for Incoming Connections----------------------------------------------
 	
 	
-int listenerror;
+    int listenerror;
 	
-listenerror=listen(socketdescriptortcp, BACKLOG);						// Listen on incoming connections
-if(listenerror==-1)
-{
+    listenerror=listen(socketdescriptortcp, BACKLOG);						// Listen on incoming connections
+    if(listenerror==-1)
+    {
 	perror("listen");													// Error checking
 	exit(1);
-}
+    }
 	
 	
-//---------------------------------------------Get the Pending Connections--------------------------------------------------
+    //---------------------------------------------Get the Pending Connections--------------------------------------------------
 	
-int accepterror;
-socklen_t addrlen;
-addrlen = sizeof Arduinounitinfo;
+    int accepterror;
+    socklen_t addrlen;
+    addrlen = sizeof Arduinounitinfo;
 
-accepterror=accept(socketdescriptortcp,(struct sockaddr*)&Arduinounitinfo,&addrlen); // Get the descriptor for Send & Receive
-if(accepterror==-1)
-	{
-		perror("accept");												// Error checking
-		exit(1);
-	}
+    accepterror=accept(socketdescriptortcp,(struct sockaddr*)&Arduinounitinfo,&addrlen); // Get the descriptor for Send & Receive
 
-//printf("The TCP Socket Descriptor Is : %d\n",accepterror);
+    if(accepterror==-1)
+    {
+      perror("accept");												// Error checking
+      exit(1);
+    }
+
+    //printf("The TCP Socket Descriptor Is : %d\n",accepterror);
 	
-//-----------------------------------------------Receive The Message--------------------------------------------------------
+    //-----------------------------------------------Receive The Message--------------------------------------------------------
 
 
-int receiveerror;							
-char replytcp[MAXBUFLEN];
+    unsigned char reply[MAXBUFLEN];
+    int offset = 0;
+    int ret=recv(accepterror, reply, MAXBUFLEN, 0);					// Receive the incoming message
+  
+    //printf("The Receive Error Variable Is %d\n",receiveerror);
+
+    while (ret > 0 )
+    {
+	reply[ret]='\0';	
+	for (int i = 0; i < ret; i++)
+	  {
+	    printf("0x%x ",reply[offset + i]);
+	  }
+	offset += ret;
+	ret = recv(accepterror, reply + offset, MAXBUFLEN - offset, 0);
+    }
+    printf("\n");
+
+    //----------------------------------------------------Message Extraction-----------------------------------------------------
 
 
-receiveerror=recv(accepterror,replytcp,MAXBUFLEN-1,0);					// Receive the incoming message
-if(receiveerror==-1)
-	{
-		perror("recv");													// Error checking
-		exit(1);
-	}
-//printf("The Receive Error Variable Is %d\n",receiveerror);
-
-replytcp[receiveerror]='\0';											// Appending String with a 'NULL' character
-printf("The Message Received Is %s\n\n",replytcp);
-
-
-
-//----------------------------------------------------Message Extraction-----------------------------------------------------
-
-
-unsigned int proto;
-unsigned int sensorid;
-unsigned int Whole;
-unsigned int Fract;
+    unsigned int proto = 0;
+    long unsigned int sensorid = 0;
+    unsigned high = 0, low = 0;
 	
-//sscanf(replytcp,"%u %u %u %u",proto,sensorid,Whole,Fract);				// Extract the message that is received
+    printf("%lu\n", sizeof(sensorid));
+    for (int i = 0; i < offset; i++)
+      {
+	unsigned int ui = reply[i];
+	if (i < 4)
+	  proto += (ui << ((3 - i)*8));
+	else if (i >= 4 && i <= 11)
+	  {
+	    unsigned long ul = ui;
+	    sensorid += (ul << ((11-i)*8));
+	  }
+	else if (i == 12)
+	  high = ui;
+        else
+	  low = ui;
+      }
 
+    short t = (high << 8) | low;
+    printf("proto: 0x%.2x, sensor id: %#.16lx, high: 0x%.2x, low: 0x%.2x, temperature: %d.%d\n", proto, sensorid, high, low, t/100, t%100);
+  }
 
-}
-//---------------------------------------------------Terminate the Process--------------------------------------------------
+  //---------------------------------------------------Terminate the Process--------------------------------------------------
 
+  close(socketdescriptortcp);												// Close the TCP socket
 
-close(socketdescriptortcp);												// Close the TCP socket
-//exit(1);																// Terminate the ServerArduino Process
-
-
+  return 0;
 }

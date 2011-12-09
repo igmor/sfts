@@ -30,9 +30,7 @@ struct sockaddr_in Arduinounitinfo;						// Structure for the Arduino unit
 struct sockaddr_in serverinfo;							// Structure for the server
 unsigned prev_high = 0;
 struct timeval tv;
-struct timeval prev_tv; {
-	<#fields#>
-}
+struct timeval prev_tv;
 
 //----------------------------------------------------Server Program--------------------------------------------------------
 
@@ -192,7 +190,7 @@ int main()
 		perror("gettimeofday");
 	}
 	  
-	  
+	
 	if (((prev_high - high) > (unsigned)1.5 || (high - prev_high) > (unsigned)1.5) || (tv.tv_sec - prev_tv.tv_sec > 240))
 	{
 		prev_tv.tv_sec = tv.tv_sec;
@@ -203,8 +201,11 @@ int main()
 		printf("calling %s, return code %d\n", cmd_line, system(cmd_line));
 	}
 	
-	prev_high = high;
-	
+	if (tv.tv_sec - prev_tv.tv_sec > 45)
+	{
+		prev_high = high;
+	}
+
   }
 
   //---------------------------------------------------Terminate the Process--------------------------------------------------

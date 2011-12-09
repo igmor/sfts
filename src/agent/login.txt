@@ -4,7 +4,7 @@
 	    xmlns:env="http://schemas.xmlsoap.org/soap/envelope/">
   <env:Body>
 	<n1:login xmlns:n1="urn:partner.soap.sforce.com">
-		<n1:username>igmorv@gmail.com</n1:username>
-		<n1:password>arduino1234</n1:password>    </n1:login>
+		<n1:username></n1:username>
+		<n1:password></n1:password>    </n1:login>
   </env:Body>
 </env:Envelope>

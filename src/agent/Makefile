@@ -22,6 +22,6 @@ ser: server.o
 	$(LD) server server.o $(LDFLAGS)
 
 clean:
-	rm -f $(OBJS) *.a *.lib *.o *.pdb client server .depend TAGS
+	rm -f $(OBJS) *.a *.o client server .depend TAGS
 
 

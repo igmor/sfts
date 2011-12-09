@@ -15,6 +15,7 @@
 #include<sys/socket.h>
 #include<arpa/inet.h>
 #include<sys/wait.h>
+#include <sys/time.h>
 #include<math.h>
 
 #define SERVERPORT 15000							// Static port for the server
@@ -27,7 +28,11 @@
 
 struct sockaddr_in Arduinounitinfo;						// Structure for the Arduino unit
 struct sockaddr_in serverinfo;							// Structure for the server
-
+unsigned prev_high = 0;
+struct timeval tv;
+struct timeval prev_tv; {
+	<#fields#>
+}
 
 //----------------------------------------------------Server Program--------------------------------------------------------
 
@@ -179,11 +184,27 @@ int main()
 
     short t = (high << 8) | low;
     printf("proto: 0x%.2x, sensor id: %#.16lx, high: 0x%.2x, low: 0x%.2x, temperature: %d.%d\n", proto, sensorid, high, low, t/100, t%100);
+	  
+	
+	int time_error = gettimeofday(&tv, NULL);
+	if(time_error)
+	{
+		perror("gettimeofday");
+	}
+	  
+	  
+	if (((prev_high - high) > (unsigned)1.5 || (high - prev_high) > (unsigned)1.5) || (tv.tv_sec - prev_tv.tv_sec > 240))
+	{
+		prev_tv.tv_sec = tv.tv_sec;
+		
+		char cmd_line[80];
+		sprintf(cmd_line, "%s %#.16lx %.2f", "./../web/insert_t_to_force.sh", sensorid, float(t/100) + float(t%100)/100);
 
-    char cmd_line[80];
-    sprintf(cmd_line, "%s %#.16lx %.2f", "./../web/insert_t_to_force.sh", sensorid, float(t/100) + float(t%100)/100);
-
-    printf("calling %s, return code %d\n", cmd_line, system(cmd_line));
+		printf("calling %s, return code %d\n", cmd_line, system(cmd_line));
+	}
+	
+	prev_high = high;
+	
   }
 
   //---------------------------------------------------Terminate the Process--------------------------------------------------

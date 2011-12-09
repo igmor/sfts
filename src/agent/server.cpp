@@ -179,6 +179,11 @@ int main()
 
     short t = (high << 8) | low;
     printf("proto: 0x%.2x, sensor id: %#.16lx, high: 0x%.2x, low: 0x%.2x, temperature: %d.%d\n", proto, sensorid, high, low, t/100, t%100);
+
+    char cmd_line[80];
+    sprintf(cmd_line, "%s %#.16lx %.2f", "./../web/insert_t_to_force.sh", sensorid, float(t/100) + float(t%100)/100);
+
+    printf("calling %s, return code %d\n", cmd_line, system(cmd_line));
   }
 
   //---------------------------------------------------Terminate the Process--------------------------------------------------

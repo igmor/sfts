@@ -1,0 +1,82 @@
+<apex:page controller="TemperatureListController" sidebar="false"> 
+<head>
+<apex:includeScript value="{!URLFOR($Resource.jQuery, '/js/jquery-1.6.2.min.js')}"/>
+<apex:includeScript value="{!URLFOR($Resource.jQuery, '/js/jquery-ui-1.8.16.custom.min.js')}"/>
+<style type="text/css">
+#container {
+    width: 100px;
+    height: 100px;
+    position: relative;
+}
+
+#navi, 
+#infoi {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 200;
+    left: 200;
+}
+
+#infoi {
+    z-index: 100;
+}
+</style>
+<script>
+    var temp = 0.0;
+    var tempDate = (new Date()).getTime();
+
+    function toggleCoffeePotLight(t)
+    {
+        if (temp < 42.0)
+        {
+            document.getElementById("infoi").style.visibility="visible";        
+            document.getElementById("infoi").style.display="block";                    
+        }
+        else
+        {
+            document.getElementById("infoi").style.display="none";
+            document.getElementById("infoi").style.visibility="hidden"; 
+        }
+    }
+    
+    function getRemoteTemperature() {
+        TemperatureListController.getLatestTemperature(
+            function(result, event){
+                if (event.status) {
+                    temp = result.temp__c;
+                    tempDate = result.CreatedDate;
+                    toggleCoffeePotLight(temp);
+                } 
+                else if (event.type === 'exception') {
+                    alert("Exception " + message);
+                } 
+                else {
+                    alert(message);
+                }
+        }, {escape:true});
+    }
+    
+    function onLoad()
+    {
+        getRemoteTemperature();
+    }
+
+   $j = jQuery.noConflict();
+   $j(document).ready(function() {
+       onLoad();
+   });
+   
+</script>
+</head>
+<body>
+   <apex:pageBlock >
+         <apex:image url="{!URLFOR($Resource.floor8, 'images/8th_floor_landmark.gif')}" width="691" height="555" />   
+   </apex:pageBlock>
+    <div id="infoi" style="z-index:40;position: absolute;top:528px;left:630px;">
+         <apex:image url="{!URLFOR($Resource.floor8, 'images/cube_locator_icon.gif')}"/>                
+    </div>   
+   <!-- End Default Content REMOVE THIS -->
+</body>
+</apex:page>
+

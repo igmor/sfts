@@ -60,8 +60,6 @@ int main()
   ipaddr1 = gethostbyname(hostname);										// To get the IP Address
 
   serverinfo.sin_addr = *((struct in_addr *)ipaddr1->h_addr);				// Load the IP Address to the structure
-  //printf("The Server's Host Address Is : %s\n",inet_ntoa(serverinfo.sin_addr));
-
 
 
   //--------------------------------------------------Create The TCP Socket---------------------------------------------------
@@ -69,9 +67,9 @@ int main()
 
   int socketdescriptortcp;
 
-  socketdescriptortcp = socket(serverinfo.sin_family, SOCK_STREAM, 0);	// Getting a TCP Socket descriptor
+  int sock = socket(serverinfo.sin_family, SOCK_STREAM, 0);	// Getting a TCP Socket descriptor
   //printf("The Socket Descriptor Is : %d\n",socketdescriptortcp);
-  if (socketdescriptortcp == -1)									// Error Checking
+  if (sock == -1)									// Error Checking
   {
       perror("socket");
       exit(1);
@@ -79,7 +77,7 @@ int main()
 
   char yes='1';															// Clear any hogging port if any
 
-  if(setsockopt(socketdescriptortcp,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1)
+  if(setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(int)) == -1)
   {
     perror("setsockopt");													// Error Checking
     exit(1);
@@ -90,7 +88,7 @@ int main()
 
   int binderrortcp;
   // Binding the socket
-  binderrortcp = bind(socketdescriptortcp, (struct sockaddr*)&serverinfo, sizeof(struct sockaddr));
+  binderrortcp = bind(sock, (struct sockaddr*)&serverinfo, sizeof(struct sockaddr));
   //printf("The Bind Error Is : %d\n\n",binderrortcp);
   if(binderrortcp==-1)
   {
@@ -111,7 +109,7 @@ int main()
 	
     int listenerror;
 	
-    listenerror=listen(socketdescriptortcp, BACKLOG);						// Listen on incoming connections
+    listenerror = listen(sock, BACKLOG);						// Listen on incoming connections
     if(listenerror==-1)
     {
 	perror("listen");													// Error checking
@@ -121,29 +119,24 @@ int main()
 	
     //---------------------------------------------Get the Pending Connections--------------------------------------------------
 	
-    int accepterror;
     socklen_t addrlen;
     addrlen = sizeof Arduinounitinfo;
 
-    accepterror=accept(socketdescriptortcp,(struct sockaddr*)&Arduinounitinfo,&addrlen); // Get the descriptor for Send & Receive
+    int acc_socket = accept(sock,(struct sockaddr*)&Arduinounitinfo,&addrlen); // Get the descriptor for Send & Receive
 
-    if(accepterror==-1)
+    if( acc_socket == -1)
     {
       perror("accept");												// Error checking
       exit(1);
     }
-
-    //printf("The TCP Socket Descriptor Is : %d\n",accepterror);
 	
     //-----------------------------------------------Receive The Message--------------------------------------------------------
 
 
     unsigned char reply[MAXBUFLEN];
     int offset = 0;
-    int ret=recv(accepterror, reply, MAXBUFLEN, 0);					// Receive the incoming message
+    int ret=recv(acc_socket, reply, MAXBUFLEN, 0);					// Receive the incoming message
   
-    //printf("The Receive Error Variable Is %d\n",receiveerror);
-
     while (ret > 0 )
     {
 	reply[ret]='\0';	
@@ -152,7 +145,7 @@ int main()
 	    printf("0x%x ",reply[offset + i]);
 	  }
 	offset += ret;
-	ret = recv(accepterror, reply + offset, MAXBUFLEN - offset, 0);
+	ret = recv(acc_socket, reply + offset, MAXBUFLEN - offset, 0);
     }
     printf("\n");
 
@@ -191,7 +184,7 @@ int main()
 	}
 	  
 	
-	if (((prev_high - high) > (unsigned)1.5 || (high - prev_high) > (unsigned)1.5) || (tv.tv_sec - prev_tv.tv_sec > 240))
+	//	if (((prev_high - high) > (unsigned)1.5 || (high - prev_high) > (unsigned)1.5) || (tv.tv_sec - prev_tv.tv_sec > 15))
 	{
 		prev_tv.tv_sec = tv.tv_sec;
 		
@@ -199,6 +192,7 @@ int main()
 		sprintf(cmd_line, "%s %#.16lx %.2f", "./../web/insert_t_to_force.sh", sensorid, float(t/100) + float(t%100)/100);
 
 		printf("calling %s, return code %d\n", cmd_line, system(cmd_line));
+		prev_high = high;
 	}
 	
 	if (tv.tv_sec - prev_tv.tv_sec > 45)
@@ -206,11 +200,12 @@ int main()
 		prev_high = high;
 	}
 
+	close(acc_socket);
   }
 
   //---------------------------------------------------Terminate the Process--------------------------------------------------
 
-  close(socketdescriptortcp);												// Close the TCP socket
+  close(sock);												// Close the TCP socket
 
   return 0;
 }

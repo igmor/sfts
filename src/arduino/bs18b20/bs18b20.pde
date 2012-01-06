@@ -729,7 +729,7 @@ unsigned int magic = 0xBEEF;
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 byte ip[] = { 10, 0, 63, 177 };
 byte gw[] = { 10, 0, 63, 1 };
-byte server[] = { 10, 0, 63, 82 }; // Neeraj
+byte server[] = { 10, 0, 63, 165 }; // Neeraj
 //byte server[] = { 74, 125, 224, 81 }; // Google
 
 #define SERIAL_LEN 8

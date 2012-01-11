@@ -20,6 +20,7 @@ login()
     SESSION_ID=`curl https://login.salesforce.com/services/Soap/u/23.0 \
 	-H "Content-Type:text/xml; charset=UTF-8" -H "SOAPAction: login" -d @login.txt | sed -e \
 	"s/.*<sessionId>\(.*\)<\/sessionId>.*/\1/"`
+	echo $SESSION_ID
 }
 
 compose_json()
